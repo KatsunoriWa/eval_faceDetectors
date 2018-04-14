@@ -1,0 +1,10 @@
+*/*.py,v
+*/*.ipynb.v
+*/*.csv
+*/*/lfw
+*/*/headPose
+*/*/result
+*/*/*/*.jpg
+*/*/*/*/*.jpg
+*/*/*/*/*/*.jpg
+

@@ -14,32 +14,7 @@ import dlib
 
 import readheadPose
 
-
-def rotate(img, deg):
-    """rotate anti-clockwise
-    img: numpy image
-    deg:
-    """
-    pilImg = PIL.Image.fromarray(np.uint8(img))
-    rotated = pilImg.rotate(deg)
-    return np.asarray(rotated)+0
-
-def isInside(point, leftTop, rightBottom):
-    """
-    return True if point is in the rectangle define by leftTop and rightBottom
-    """
-
-    if not (leftTop[0] < point[0] < rightBottom[0]):
-        return False
-    if not (leftTop[1] < point[1] < rightBottom[1]):
-        return False
-    return True
-
-def centerIsInRect(shape, leftTop, rightBottom):
-    center = (shape[1]/2, shape[0]/2)
-    return isInside(center, leftTop, rightBottom)
-
-
+from helper import *
 
 
 class HaarCascadeDetector(object):
@@ -52,7 +27,7 @@ class HaarCascadeDetector(object):
         
         
 
-def processDatabase(dataset, names, deg=0, min_score_thresh=0.7, showImg=True):
+def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, showImg=True):
     """run face detection for named dataset as names.
     dataset:
     names:
@@ -63,8 +38,8 @@ def processDatabase(dataset, names, deg=0, min_score_thresh=0.7, showImg=True):
         d = readheadPose.getTruePosition()
 
 
-    log = open("log_%s_%d.csv" % (dataset, deg), "wt")
-    log.write("name,num,truePositives,falsePositives\n")
+    log = open("log_%s_%d_%f.csv" % (dataset, deg, scale), "wt")
+    log.write("name,num,truePositives,falsePositives,meanSize\n")
 
     detector = HaarCascadeDetector()
 
@@ -81,25 +56,39 @@ def processDatabase(dataset, names, deg=0, min_score_thresh=0.7, showImg=True):
         if deg != 0:
             frame = rotate(frame, deg)
 
+        [h, w] = frame.shape[:2]
+        scaledImg = scaledImage(frame, scale)
+        frame = scaledImg
+
+
         cols = frame.shape[1]
         rows = frame.shape[0]
         imgCenter = [cols/2, rows/2]
 
         dets, scores, idx = detector.run(frame)
         # ここで検出結果の枠の扱いなどをそろえること
-
+        
         trueDetection = {True:0, False:0}
 
         if dataset in ("lfw", ):
             center = imgCenter
+            center = (int(scale*center[0]), int(scale*center[1]))
+
         elif dataset == "headPose":
             v = d[p]
             center = (v[0], v[1])
             center = readheadPose.getRotatedPoint(center, deg, imgCenter)
-            cv.circle(frame, center, 50, (0, 255, 0))
+            #　ここで縮小したことによる画像の点の扱いを修正すること
+            center = (int(scale*center[0]), int(scale*center[1]))
+
+            r = int(50*scale)
+
+            cv.circle(frame, center, r, (0, 255, 0))
         else:
             center = imgCenter
+            center = (int(scale*center[0]), int(scale*center[1]))
 
+        trueSizes = []
 
         for i in range(len(dets)):
             x, y, w, h = dets[i]
@@ -112,6 +101,7 @@ def processDatabase(dataset, names, deg=0, min_score_thresh=0.7, showImg=True):
             isPositive = isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
 
             trueDetection[isPositive] += 1
+            trueSizes.append(xRightBottom - xLeftTop)
 
             cv.circle(frame, (xLeftTop, yLeftTop), 5, (0, 255, 0))
             cv.circle(frame, (xRightBottom, yRightBottom), 5, (0, 255, 0))
@@ -121,7 +111,7 @@ def processDatabase(dataset, names, deg=0, min_score_thresh=0.7, showImg=True):
                          color, 5)
 
         found = trueDetection[True] + trueDetection[False]
-        log.write("%s, %d, %d, %d\n" % (p, found, trueDetection[True], trueDetection[False]))
+        log.write("%s, %d, %d, %d, %s\n" % (p, found, trueDetection[True], trueDetection[False], `np.mean(trueSizes)`))
 
         if windowNotSet is True:
             cv.namedWindow("tensorflow based (%d, %d)" % (cols, rows), cv.WINDOW_NORMAL)
@@ -150,9 +140,9 @@ if __name__ == '__main__':
 #    dataset = "att"
 
     if dataset == "headPose":
-        names = glob.glob("headPose/Person*/*.jpg")[:20]
+        names = glob.glob("headPose/Person*/*.jpg")
     elif dataset == "lfw":
-        names = glob.glob("lfw/lfw/*/*.jpg")
+        names = glob.glob("lfw/lfw/*/*.jpg")[:20]
     elif dataset == "cnn":
         names = glob.glob("cnn*/*/*.jpg")
     elif dataset == "att":
@@ -160,4 +150,5 @@ if __name__ == '__main__':
 
 
     names.sort()
-    processDatabase(dataset, names)
+#    print names
+    processDatabase(dataset, names, 20, scale=0.5)
