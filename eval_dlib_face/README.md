@@ -1,4 +1,4 @@
-# Evaluattion for Dlib frontal face
+# Evaluation for Dlib frontal face
 Evaluation script for Dlib frontal face
 
 ## Requirements
@@ -25,16 +25,24 @@ Evaluation scripts are written as jupyter notebook file (*.ipynb)
 $ jupyter notebook
 ```
 
+
 ### evaluate detection ratio
-- log_lfw.ipynb
-- log_headPose.ipynb
-- log_cnn.ipynb
+- dlib_headPose.ipynb
+- dlib_lfw.ipynb
+- dlib_cnn.ipynb
 
 
 ### evaluate detection ratio with roll
 
-- log_headPose_rotate.ipynb
-- log_lfw_rotate.ipynb
+- dlib_headPose_rotate.ipynb
+- dlib_lfw_rotate.ipynb
+
+
+### evaluate detection ratio with size
+
+dlib_headPose_size.ipynb
+dlib_lfw_size.ipynb
+
 
 ### Results
 
@@ -42,6 +50,9 @@ You can see some results in the jupyter notebook file.
 
 
 ## note:
+Dlib has tow types of face_detector.
+http://dlib.net/face_detector.py.html
+http://dlib.net/cnn_face_detector.py.html
+
+
 Some comments are written in Japanese.
-
-
