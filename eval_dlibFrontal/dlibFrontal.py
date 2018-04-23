@@ -3,6 +3,9 @@
 # pylint: disable=C0103
 # pylint: disable=E1101
 
+# Python 2/3 compatibility
+from __future__ import print_function
+
 import sys
 import os
 import glob
@@ -124,8 +127,8 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
 
 if __name__ == '__main__':
     if len(sys.argv) == 0:
-        print """usage: %s (headPose | lfw | cnn)
-        """ % sys.argv[0]
+        print("""usage: %s (headPose | lfw | cnn)
+        """ % sys.argv[0])
         exit()
 
 
