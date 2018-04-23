@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0103
 # pylint: disable=E1101
+
+# Python 2/3 compatibility
+from __future__ import print_function
+
 import glob
 import os
 import math
@@ -53,6 +57,6 @@ if __name__ == "__main__":
 
     deg = 90
     for k in keys:
-        print k, d[k],
+        print(k, d[k], end='')
         point = tuple(d[k][:2])
-        print getRotatedPoint(point, deg, imgCenter)
+        print(getRotatedPoint(point, deg, imgCenter))

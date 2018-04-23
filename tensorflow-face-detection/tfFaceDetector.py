@@ -3,6 +3,10 @@
 # pylint: disable=C0103
 # pylint: disable=E1101
 
+
+# Python 2/3 compatibility
+from __future__ import print_function
+
 import sys
 import os
 import glob
@@ -101,8 +105,8 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
         d = readheadPose.getTruePosition()
 
 
-    log = open("log_%s_%d.csv" % (dataset, deg), "wt")
-    log.write("name,num,truePositives,falsePositives\n")
+    log = open("log_%s_%d_%f.csv" % (dataset, deg, scale), "wt")
+    log.write("name,num,truePositives,falsePositives,meanSize\n")
 
     tDetector = TensoflowFaceDector()
     category_index = getGategoryIndex()
@@ -147,6 +151,8 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
 
         if dataset in ("lfw", ):
             center = imgCenter
+            center = (int(scale*center[0]), int(scale*center[1]))
+
         elif dataset == "headPose":
             v = d[p]
             center = (v[0], v[1])
@@ -159,13 +165,16 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
             cv.circle(frame, center, r, (0, 255, 0))
         else:
             center = imgCenter
+            center = (int(scale*center[0]), int(scale*center[1]))
 
 
+        trueSizes = []
         boxes_shape = boxes.shape
         for i in range(boxes_shape[0]):
             ymin, xmin, ymax, xmax = boxes[i, 0], boxes[i, 1], boxes[i, 2], boxes[i, 3]
             yLeftTop, xLeftTop, yRightBottom, xRightBottom = ymin * h, xmin * w, ymax * h, xmax * w
             yLeftTop, xLeftTop, yRightBottom, xRightBottom = int(yLeftTop), int(xLeftTop), int(yRightBottom), int(xRightBottom)
+            width = xRightBottom - xLeftTop
 
             if scores[i] <= min_score_thresh:
                 continue
@@ -173,6 +182,7 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
             isPositive = isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
 
             trueDetection[isPositive] += 1
+            trueSizes.append(width)
 
             cv.circle(frame, (xLeftTop, yLeftTop), 5, (0, 255, 0))
             cv.circle(frame, (xRightBottom, yRightBottom), 5, (0, 255, 0))
@@ -182,7 +192,7 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
                          color, 5)
 
         found = trueDetection[True] + trueDetection[False]
-        log.write("%s, %d, %d, %d\n" % (p, found, trueDetection[True], trueDetection[False]))
+        log.write("%s, %d, %d, %d, %s\n" % (p, found, trueDetection[True], trueDetection[False],`np.mean(trueSizes)`))
 
         if windowNotSet is True:
             cv.namedWindow("tensorflow based (%d, %d)" % (w, h), cv.WINDOW_NORMAL)
@@ -199,8 +209,8 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
 
 if __name__ == '__main__':
     if len(sys.argv) == 0:
-        print """usage: %s (headPose | lfw | cnn)
-        """ % sys.argv[0]
+        print("""usage: %s (headPose | lfw | cnn)
+        """ % sys.argv[0])
         exit()
 
 

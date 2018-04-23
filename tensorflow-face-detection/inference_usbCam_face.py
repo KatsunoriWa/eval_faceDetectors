@@ -3,6 +3,10 @@
 # pylint: disable=C0103
 # pylint: disable=E1101
 
+
+# Python 2/3 compatibility
+from __future__ import print_function
+
 import sys
 import time
 import numpy as np
@@ -79,11 +83,11 @@ class TensoflowFaceDector(object):
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
-        print """usage:%s (cameraID | filename)
+        print("""usage:%s (cameraID | filename)
 Detect faces in the video
 example:
 %s 0
-""" % (sys.argv[0], sys.argv[0])
+""" % (sys.argv[0], sys.argv[0]))
         exit(1)
 
     try:
@@ -101,7 +105,7 @@ example:
             break
 
         [h, w] = image.shape[:2]
-        print h, w
+        print(h, w)
         image = cv2.flip(image, 1)
 
         (boxes, scores, classes, num_detections) = tDetector.run(image)
