@@ -9,6 +9,16 @@ evaluation of face detectors including opencv dnn face detector
 
 ## tensorflow Face detector
 
+|detector| pretrained_model | input image size|
+|----|----|----|
+|OpenCV Haar Cascade| haarcascade_frontalface_default.xml  | no upper limit   |
+|OpenCV resnet ssd face detcator | res10_300x300_ssd_iter_140000.caffemodel |  300x300 |
+|dlib FrontalFace |                                      |                  |
+|dlib cnn_face_detector |  mmod_human_face_detector.dat |                  |
+|tensorflow Face detector | rozen_inference_graph_face.pb |                  |
+
+
+
 
 ### memo in Japanese
 
@@ -20,3 +30,7 @@ evaluation of face detectors including opencv dnn face detector
 LFWの画像の場合は、
 顔照合を目的とした画像セットであるため、
 顔の顔向きがほぼ正面顔である。
+
+
+まだ評価できていないもの
+dlib/python_examples/cnn_face_detector.py
