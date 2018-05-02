@@ -11,13 +11,10 @@ import os
 import glob
 import numpy as np
 import cv2 as cv
-import PIL.Image
-
-import dlib
 
 import readheadPose
 
-from helper import *
+import helper
 
 
 class HaarCascadeDetector(object):
@@ -57,10 +54,10 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
 
         frame = cv.imread(p)
         if deg != 0:
-            frame = rotate(frame, deg)
+            frame = helper.rotate(frame, deg)
 
         [h, w] = frame.shape[:2]
-        scaledImg = scaledImage(frame, scale)
+        scaledImg = helper.scaledImage(frame, scale)
         frame = scaledImg
 
 
@@ -101,7 +98,7 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
             if scores[i] <= min_score_thresh:
                 continue
 
-            isPositive = isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
+            isPositive = helper.isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
 
             trueDetection[isPositive] += 1
             trueSizes.append(xRightBottom - xLeftTop)
