@@ -15,7 +15,7 @@ evaluation of face detectors including opencv dnn face detector
 |OpenCV resnet ssd face detcator | res10_300x300_ssd_iter_140000.caffemodel |  300x300 |
 |dlib FrontalFace |                                      |                  |
 |dlib cnn_face_detector |  mmod_human_face_detector.dat |                  |
-|tensorflow Face detector | rozen_inference_graph_face.pb |                  |
+|tensorflow Face detector | frozen_inference_graph_face.pb |                  |
 
 
 
