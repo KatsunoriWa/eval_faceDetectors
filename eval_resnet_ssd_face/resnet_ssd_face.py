@@ -12,10 +12,9 @@ import os
 import glob
 import numpy as np
 import cv2 as cv
-import PIL.Image
 import resnetFaceDetector
 
-from helper import *
+import helper
 
 def processDatabase(dataset, names, deg=0, scale=1.0, confThreshold=0.5, showImg=True):
     """run face detection for named dataset as names.
@@ -43,10 +42,10 @@ def processDatabase(dataset, names, deg=0, scale=1.0, confThreshold=0.5, showImg
 
         frame = cv.imread(p)
         if deg != 0:
-            frame = rotate(frame, deg)
+            frame = helper.rotate(frame, deg)
 
         [h, w] = frame.shape[:2]
-        scaledImg = scaledImage(frame, scale)
+        scaledImg = helper.scaledImage(frame, scale)
         frame = scaledImg
 
 
@@ -77,7 +76,7 @@ def processDatabase(dataset, names, deg=0, scale=1.0, confThreshold=0.5, showImg
             center = imgCenter
             center = (int(scale*center[0]), int(scale*center[1]))
 
-        trueSizes=[]
+        trueSizes = []
         for i in range(detections.shape[2]):
             confidence = detections[0, 0, i, 2]
             if confidence > confThreshold:
@@ -85,9 +84,9 @@ def processDatabase(dataset, names, deg=0, scale=1.0, confThreshold=0.5, showImg
                 yLeftTop = int(detections[0, 0, i, 4] * rows)
                 xRightBottom = int(detections[0, 0, i, 5] * cols)
                 yRightBottom = int(detections[0, 0, i, 6] * rows)
-                width = xRightBottom - xLeftTop            
+                width = xRightBottom - xLeftTop
 
-                isPositive = isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
+                isPositive = helper.isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
                 trueDetection[isPositive] += 1
                 trueSizes.append(width)
 

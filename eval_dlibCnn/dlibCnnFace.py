@@ -11,22 +11,21 @@ import os
 import glob
 import numpy as np
 import cv2 as cv
-import PIL.Image
 
 import dlib
 
 import readheadPose
 
-from helper import *
+import helper
 
 class DlibCnnDetector(object):
     def __init__(self):
         self.detector = dlib.cnn_face_detection_model_v1("mmod_human_face_detector.dat")
-        
+
 
     def run(self, frame):
         dets = self.detector(frame, 1)
-        
+
         rects = []
         scores = []
         for i, d in enumerate(dets):
@@ -38,7 +37,21 @@ class DlibCnnDetector(object):
             scores.append(d.confidence)
         return rects, scores
 
-        
+
+def getCenter_HeadPose(imgCenter, deg, scale, d, p):
+    v = d[p]
+    center = (v[0], v[1])
+    center = readheadPose.getRotatedPoint(center, deg, imgCenter)
+    #　ここで縮小したことによる画像の点の扱いを修正すること
+    center = (int(scale*center[0]), int(scale*center[1]))        
+    return center
+
+def getCenter(imgCenter, deg, scale):
+    center = imgCenter
+    center = (int(scale*center[0]), int(scale*center[1]))        
+    return center
+
+
 def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, showImg=True):
     """run face detection for named dataset as names.
     dataset:
@@ -48,7 +61,6 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
     if dataset == "headPose":
         import readheadPose
         d = readheadPose.getTruePosition()
-
 
     log = open("log_%s_%d_%f.csv" % (dataset, deg, scale), "wt")
     log.write("name,num,truePositives,falsePositives,meanSize\n")
@@ -67,10 +79,10 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
 
         frame = cv.imread(p)
         if deg != 0:
-            frame = rotate(frame, deg)
-            
+            frame = helper.rotate(frame, deg)
+
         [h, w] = frame.shape[:2]
-        scaledImg = scaledImage(frame, scale)
+        scaledImg = helper.scaledImage(frame, scale)
         frame = scaledImg
 
         cols = frame.shape[1]
@@ -101,19 +113,19 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
             center = imgCenter
             center = (int(scale*center[0]), int(scale*center[1]))
 
-        trueSizes=[]
-        for i in range(len(dets)):
-            rx, ry, rw, rh = dets[i]
+        trueSizes = []
+        for i, det in enumerate(dets):
+            rx, ry, rw, rh = det
             xLeftTop = rx
             yLeftTop = ry
             yRightBottom = ry + rh
             xRightBottom = rx + rw
-            width = xRightBottom - xLeftTop            
-            
+            width = xRightBottom - xLeftTop
+
             if scores[i] <= min_score_thresh:
                 continue
 
-            isPositive = isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
+            isPositive = helper.isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
 
             trueDetection[isPositive] += 1
             trueSizes.append(width)

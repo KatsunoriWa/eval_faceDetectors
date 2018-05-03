@@ -12,16 +12,14 @@ import os
 import glob
 import numpy as np
 import cv2 as cv
-import PIL.Image
 import time
 
 import tensorflow as tf
 from utils import label_map_util
-from utils import visualization_utils_color as vis_util
 
 import readheadPose
 
-from helper import *
+import helper
 
 def getGategoryIndex():
     # List of the strings that is used to add correct label for each box.
@@ -122,10 +120,10 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
 
         frame = cv.imread(p)
         if deg != 0:
-            frame = rotate(frame, deg)
+            frame = helper.rotate(frame, deg)
 
         [h, w] = frame.shape[:2]
-        scaledImg = scaledImage(frame, scale)
+        scaledImg = helper.scaledImage(frame, scale)
         frame = scaledImg
 
 
@@ -135,17 +133,6 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
         imgCenter = [cols/2, rows/2]
 
         (boxes, scores, classes, num_detections) = tDetector.run(frame)
-
-
-#        vis_util.visualize_boxes_and_labels_on_image_array(
-#            frame,
-#            boxes,
-#            classes.astype(np.int32),
-#            scores,
-#            category_index,
-#            use_normalized_coordinates=True,
-#            line_thickness=4)
-
 
         trueDetection = {True:0, False:0}
 
@@ -179,7 +166,7 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
             if scores[i] <= min_score_thresh:
                 continue
 
-            isPositive = isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
+            isPositive = helper.isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
 
             trueDetection[isPositive] += 1
             trueSizes.append(width)
@@ -192,7 +179,7 @@ def processDatabase(dataset, names, deg=0, scale=1.0, min_score_thresh=0.7, show
                          color, 5)
 
         found = trueDetection[True] + trueDetection[False]
-        log.write("%s, %d, %d, %d, %s\n" % (p, found, trueDetection[True], trueDetection[False],`np.mean(trueSizes)`))
+        log.write("%s, %d, %d, %d, %s\n" % (p, found, trueDetection[True], trueDetection[False], `np.mean(trueSizes)`))
 
         if windowNotSet is True:
             cv.namedWindow("tensorflow based (%d, %d)" % (w, h), cv.WINDOW_NORMAL)
