@@ -26,10 +26,6 @@ class HaarCascadeDetector(object):
         dets = self.face_cascade.detectMultiScale(frame, 1.3, 5)
         detsP = self.face_cascadeP.detectMultiScale(frame, 1.3, 5)
         if len(dets) > 0 and len(detsP) > 0:
-            print(dets)
-            print(type(dets))
-            print(detsP)
-            print(type(detsP))
             detsnew = np.r_[dets, detsP]
             return detsnew, "noScore", "noIdx"
         elif len(dets) == 0 and len(detsP) > 0:
