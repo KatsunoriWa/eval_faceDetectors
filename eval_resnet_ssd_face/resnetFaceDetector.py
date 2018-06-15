@@ -21,7 +21,7 @@ class ResnetFaceDetector(object):
         self.inHeight = 300
         self.net = dnn.readNetFromCaffe(prototxt, caffemodel)
 
-    def run(self, image):
+    def _run(self, image):
         """
         image: input image
         return: detections, perf_stats
@@ -32,6 +32,29 @@ class ResnetFaceDetector(object):
 
         self.perf_stats = self.net.getPerfProfile()
         return self.detections, self.perf_stats
+
+    def run(self, image, confThreshold):
+        self._run(image)
+
+        cols = image.shape[1]
+        rows = image.shape[0]
+
+        detections = self.detections
+
+        dets = []
+        confidences = []
+        for i in range(detections.shape[2]):
+            confidence = detections[0, 0, i, 2]
+            if confidence > confThreshold:
+                xLeftTop = int(detections[0, 0, i, 3] * cols)
+                yLeftTop = int(detections[0, 0, i, 4] * rows)
+                xRightBottom = int(detections[0, 0, i, 5] * cols)
+                yRightBottom = int(detections[0, 0, i, 6] * rows)
+                dets.append((xLeftTop, yLeftTop, xRightBottom - xLeftTop, yRightBottom - yLeftTop))
+                confidences.append(confidence)
+
+        return dets, confidences, self.perf_stats
+
 
 if __name__ == '__main__':
     detector = ResnetFaceDetector()
@@ -46,31 +69,28 @@ if __name__ == '__main__':
 
         cols = frame.shape[1]
         rows = frame.shape[0]
-        detections, perf_stats = detector.run(frame)
-
+        dets, confidences, perf_stats = detector.run(frame, confThreshold)
         print('Inference time, ms: %.2f' % (perf_stats[0] / cv.getTickFrequency() * 1000))
 
-        for i in range(detections.shape[2]):
-            confidence = detections[0, 0, i, 2]
-            if confidence > confThreshold:
-                xLeftTop = int(detections[0, 0, i, 3] * cols)
-                yLeftTop = int(detections[0, 0, i, 4] * rows)
-                xRightBottom = int(detections[0, 0, i, 5] * cols)
-                yRightBottom = int(detections[0, 0, i, 6] * rows)
+        for i, det in enumerate(dets):
+            confidence = confidences[i]
+            xLeftTop, yLeftTop, w, h = det
+            xRightBottom = xLeftTop + w
+            yRightBottom = yLeftTop + h
 
-                cv.circle(frame, (xLeftTop, yLeftTop), 5, (0, 255, 0))
-                cv.circle(frame, (xRightBottom, yRightBottom), 5, (0, 255, 0))
+            cv.circle(frame, (xLeftTop, yLeftTop), 5, (0, 255, 0))
+            cv.circle(frame, (xRightBottom, yRightBottom), 5, (0, 255, 0))
 
-                cv.rectangle(frame, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom),
-                             (0, 255, 0))
-                label = "face: %.4f" % confidence
-                labelSize, baseLine = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+            cv.rectangle(frame, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom),
+                         (0, 255, 0))
+            label = "face: %.4f" % confidence
+            labelSize, baseLine = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.5, 1)
 
-                cv.rectangle(frame, (xLeftTop, yLeftTop - labelSize[1]),
-                                    (xLeftTop + labelSize[0], yLeftTop + baseLine),
-                                    (255, 255, 255), cv.FILLED)
-                cv.putText(frame, label, (xLeftTop, yLeftTop),
-                           cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+            cv.rectangle(frame, (xLeftTop, yLeftTop - labelSize[1]),
+                                (xLeftTop + labelSize[0], yLeftTop + baseLine),
+                                (255, 255, 255), cv.FILLED)
+            cv.putText(frame, label, (xLeftTop, yLeftTop),
+                       cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
 
         cv.imshow("detections", frame)
         k = cv.waitKey(1) & 0xff
