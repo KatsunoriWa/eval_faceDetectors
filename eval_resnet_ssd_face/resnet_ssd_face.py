@@ -54,7 +54,7 @@ def processDatabase(dataset, names, deg=0, scale=1.0, confThreshold=0.5, showImg
         [h, w] = frame.shape[:2]
         imgCenter = [cols/2, rows/2]
 
-        detections, perf_stats = detector.run(frame)
+        dets, confidences, perf_stats = detector.run(frame, confThreshold)
 
         trueDetection = {True:0, False:0}
 
@@ -77,34 +77,34 @@ def processDatabase(dataset, names, deg=0, scale=1.0, confThreshold=0.5, showImg
             center = (int(scale*center[0]), int(scale*center[1]))
 
         trueSizes = []
-        for i in range(detections.shape[2]):
-            confidence = detections[0, 0, i, 2]
-            if confidence > confThreshold:
-                xLeftTop = int(detections[0, 0, i, 3] * cols)
-                yLeftTop = int(detections[0, 0, i, 4] * rows)
-                xRightBottom = int(detections[0, 0, i, 5] * cols)
-                yRightBottom = int(detections[0, 0, i, 6] * rows)
-                width = xRightBottom - xLeftTop
 
-                isPositive = helper.isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
-                trueDetection[isPositive] += 1
-                trueSizes.append(width)
+        for i, det in enumerate(dets):
+            confidence = confidences[i]
+            xLeftTop, yLeftTop, width, height = det
+            xRightBottom = xLeftTop + width
+            yRightBottom = yLeftTop + height
 
-                cv.circle(frame, (xLeftTop, yLeftTop), 5, (0, 255, 0))
-                cv.circle(frame, (xRightBottom, yRightBottom), 5, (0, 255, 0))
+            width = xRightBottom - xLeftTop
 
-                color = {True:(0, 255, 0), False:(0, 0, 128)}[isPositive]
-                cv.rectangle(frame, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom),
-                             color)
+            isPositive = helper.isInside(center, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom))
+            trueDetection[isPositive] += 1
+            trueSizes.append(width)
 
-                label = "face: %.4f" % confidence
-                labelSize, baseLine = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+            cv.circle(frame, (xLeftTop, yLeftTop), 5, (0, 255, 0))
+            cv.circle(frame, (xRightBottom, yRightBottom), 5, (0, 255, 0))
 
-                cv.rectangle(frame, (xLeftTop, yLeftTop - labelSize[1]),
-                                    (xLeftTop + labelSize[0], yLeftTop + baseLine),
-                                    (255, 255, 255), cv.FILLED)
-                cv.putText(frame, label, (xLeftTop, yLeftTop),
-                           cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
+            color = {True:(0, 255, 0), False:(0, 0, 128)}[isPositive]
+            cv.rectangle(frame, (xLeftTop, yLeftTop), (xRightBottom, yRightBottom),
+                         color)
+
+            label = "face: %.4f" % confidence
+            labelSize, baseLine = cv.getTextSize(label, cv.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+
+            cv.rectangle(frame, (xLeftTop, yLeftTop - labelSize[1]),
+                                (xLeftTop + labelSize[0], yLeftTop + baseLine),
+                                (255, 255, 255), cv.FILLED)
+            cv.putText(frame, label, (xLeftTop, yLeftTop),
+                       cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
 
         found = trueDetection[True] + trueDetection[False]
         log.write("%s, %d, %d, %d, %s\n" % (p, found, trueDetection[True], trueDetection[False], `np.mean(trueSizes)`))
