@@ -43,12 +43,12 @@ def getCenter_HeadPose(imgCenter, deg, scale, d, p):
     center = (v[0], v[1])
     center = readheadPose.getRotatedPoint(center, deg, imgCenter)
     #　ここで縮小したことによる画像の点の扱いを修正すること
-    center = (int(scale*center[0]), int(scale*center[1]))        
+    center = (int(scale*center[0]), int(scale*center[1]))
     return center
 
 def getCenter(imgCenter, deg, scale):
     center = imgCenter
-    center = (int(scale*center[0]), int(scale*center[1]))        
+    center = (int(scale*center[0]), int(scale*center[1]))
     return center
 
 
