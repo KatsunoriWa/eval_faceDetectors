@@ -1,9 +1,14 @@
+*,v
+*.csv
+*.pyc
 */*.py,v
 */*.ipynb.v
 */*.csv
+*/*.pyc
 */*/lfw
 */*/headPose
 */*/result
+*/*/*.pyc
 */*/*/*.jpg
 */*/*/*/*.jpg
 */*/*/*/*/*.jpg
