@@ -1,13 +1,21 @@
 # eval_faceDetectors
 evaluation of face detectors including opencv dnn face detector
 
-## Haar Cascade Face Detector in opencv
+- You can evaluate face detection in each face detector in Jupyter environment.
 
-## dlib frontal Face detector
+- Some modules are wrapped by class interface
+
+
+## Haar Cascade Face Detector in opencv
 
 ## resnet ssd Face Detector in opencv
 
+## dlib frontal Face detector
+
+## dlib CNN Face detector
+
 ## tensorflow Face detector
+
 
 |detector| pretrained_model | input image size|
 |----|----|----|
@@ -30,7 +38,3 @@ evaluation of face detectors including opencv dnn face detector
 LFWの画像の場合は、
 顔照合を目的とした画像セットであるため、
 顔の顔向きがほぼ正面顔である。
-
-
-まだ評価できていないもの
-dlib/python_examples/cnn_face_detector.py
