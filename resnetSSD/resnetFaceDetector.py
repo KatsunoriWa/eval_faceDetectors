@@ -57,18 +57,57 @@ class ResnetFaceDetector(object):
 
 
 if __name__ == '__main__':
-    detector = ResnetFaceDetector()
+    import sys
+    import os
+    import time
 
+    def timeStr():
+        return time.strftime("%Y%m%d_%H%M%S", time.localtime())
+
+
+    if len(sys.argv) == 1:
+        print("""usage:%s [camID | moviefile])
+        detect faces in camera or in moviefile.
+        """ % sys.argv[0])
+        exit()
+
+
+    print("cv.__version__", cv.__version__)
+
+    detector = ResnetFaceDetector()
     confThreshold = 0.5
 
-    cap = cv.VideoCapture(0)
+    src = sys.argv[1]
+    if os.path.isfile(src):
+        cap = cv.VideoCapture(src)
+        base = os.path.splitext(os.path.basename(src))[0]
+    else:
+        cap = cv.VideoCapture(int(src))
+        base = "%s" % timeStr()
+
+    outDir = "../resnetFace_output"
+    if not os.path.isdir(outDir):
+        os.mkdir(outDir)
+
+    outname = os.path.join(outDir, "%s_out.avi" % base)
+    rec = None
+
     while True:
         ret, frame = cap.read()
-        if ret is None:
-            continue
+        if not ret:
+            break
 
         cols = frame.shape[1]
         rows = frame.shape[0]
+
+        if outname:
+            if rec is None:
+                FRAME_RATE = 30
+                rec = cv.VideoWriter(outname, \
+                              cv.VideoWriter_fourcc(*'MJPG'), \
+                              FRAME_RATE, \
+                              (cols, rows))
+
         dets, confidences, perf_stats = detector.run(frame, confThreshold)
         print('Inference time, ms: %.2f' % (perf_stats[0] / cv.getTickFrequency() * 1000))
 
@@ -93,6 +132,14 @@ if __name__ == '__main__':
                        cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0))
 
         cv.imshow("detections", frame)
+        if not rec is None:
+            rec.write(frame)
+
         k = cv.waitKey(1) & 0xff
         if k == ord('q') or k == 27:
             break
+
+
+    if not rec is None:
+        rec.release()
+    cap.release()
